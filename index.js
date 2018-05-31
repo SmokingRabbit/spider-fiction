@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const chance = new require('chance')();
+const pinyin = require('pinyin');
 const cheerio = require('cheerio');
 const chapter_path = '/chapter';
 const catalog_tpl = '<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/><title>{{title}}</title><link href="../assets/catalog.css" type="text/css" rel="stylesheet" /></head><body><section class="container">{{body}}</section><script src="../assets/catalog.js"></script></body></html>';
@@ -68,10 +69,19 @@ function catalog(url) {
     request.get(url, (erro, res, body) => {
         const $ = cheerio.load(body);
         book_name = $("h2.am-text-truncate").text();
+
+        let book_folder = '';
+        pinyin(book_name, {
+            style: pinyin.STYLE_NORMAL,
+            heteronym: false
+        }).forEach((item) => {
+            book_folder += item[0];
+        });
+
         let tpl = catalog_tpl;
 
-        catalog_path = path.join(__dirname, book_name);
-
+        catalog_path = path.join(__dirname, '/docs', book_folder);
+        
         mkdir(catalog_path);
         mkdir(path.join(catalog_path, chapter_path));
 
