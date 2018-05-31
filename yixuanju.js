@@ -69,6 +69,13 @@ function catalog(url) {
     request.get(url, (erro, res, body) => {
         const $ = cheerio.load(body);
         book_name = $("h2.am-text-truncate").text();
+        const $links = $(".am-list-static").find('a');
+        const links = [];
+
+        if (!$links.length) {
+            console.log('不存在的地址，抓取取消！');
+            return ;
+        }
 
         let book_folder = '';
         pinyin(book_name, {
@@ -81,7 +88,7 @@ function catalog(url) {
         let tpl = catalog_tpl;
 
         catalog_path = path.join(__dirname, '/docs', book_folder);
-        
+
         mkdir(catalog_path);
         mkdir(path.join(catalog_path, chapter_path));
 
@@ -91,8 +98,6 @@ function catalog(url) {
         tpl = tpl.replace(/{{title}}/, book_name);
 
         let content = `<h1>${book_name}</h1><ul>`;
-        const $links = $(".am-list-static").find('a');
-        const links = [];
 
         for (let i = 0; i < $links.length; i++) {
             let index = 1 + i;
@@ -113,4 +118,6 @@ function spider(url) {
     return catalog(url);
 }
 
-spider(host + '/book/12994');
+const id = process.argv[2];
+
+spider(host + '/book/' + id);
