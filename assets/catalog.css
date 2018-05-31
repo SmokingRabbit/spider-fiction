@@ -1,0 +1,49 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #eee
+}
+
+.container {
+    width: 980px;
+    margin: auto;
+}
+
+h1 {
+    font-size: 32rpx;
+    line-height: 40rpx;
+    font-weight: 400;
+    color: #999;
+    margin-top: 30px;
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+}
+
+li {
+    height: 32px;
+    line-height: 32px;
+    font-size: 16px;
+}
+
+a {
+    color: #666;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #999;;
+}
+
+@media screen and (max-width: 980px) {
+    .container {
+        width: 100%;
+        padding: 20px;
+    }
+}

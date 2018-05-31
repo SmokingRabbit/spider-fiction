@@ -4,8 +4,8 @@ const request = require('request');
 const chance = new require('chance')();
 const cheerio = require('cheerio');
 const chapter_path = '/chapter';
-const catalog_tpl = '<!doctype html><html><head><meta charset="utf-8" /><title>{{title}}</title><style>*{margin:0;padding:0}body{background-color:#eee}.container{width:980px;margin:auto}h1{font-size:32rpx;line-height:40rpx;font-weight:400;color:#999;margin-top:30px;text-align:center}ul{list-style:none}li{height:32px;line-height:32px;font-size:16px}a{color:#666;text-decoration:none}a:visited{color:#999}</style></head><body><section class="container">{{body}}</section></body></html>';
-const article_tpl = '<!doctype html><html><head><meta charset="utf-8" /><title>{{title}}</title><style>*{margin:0;padding:0}body{background-color:#eee}.container{width:980px;margin:auto}h1{font-size:32rpx;line-height:40rpx;font-weight:400;color:#999;margin-top:30px}h2{font-size:26rpx;line-height:40rpx;font-weight:400;color:#999;margin-bottom:30px;margin-top:20px}p{font-size:14px;text-indent:30px;line-height:24px;color:#444;margin-bottom:6px;}.page {margin-top: 20px;text-align: center;}</style></head><body><section class="container">{{body}}</section></body></html>';
+const catalog_tpl = '<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/><title>{{title}}</title><link href="../assets/catalog.css" type="text/css" rel="stylesheet" /></head><body><section class="container">{{body}}</section><script src="../assets/catalog.js"></script></body></html>';
+const article_tpl = '<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/><title>{{title}}</title><link href="../../assets/article.css" type="text/css" rel="stylesheet" /></head><body><section class="container">{{body}}</section><script src="../../assets/article.js"></script></body></html>';
 const host = 'http://www.yixuanju.com';
 let book_name = null;
 let catalog_path = null;
@@ -24,32 +24,44 @@ function chapter(urls, index) {
         return ;
     }
 
-    request.get(url, (erro, res, body) => {
-        const $ = cheerio.load(body);
-        const title = $('.am-active').text();
-        let article = $('#cha-content').text()
-            .replace(/\t+/g, '')
-            .replace(/\n+/g, '#')
-            .replace(/\s+/g, '')
-            .split('#');
-        let tpl = article_tpl.replace(/{{title}}/, title);
-        let content = `<h1>${book_name}</h1><h2>${title}</h2>`;
-        for (let i = 0; i < article.length; i++) {
-            let paragraph = article[i];
-            content += `<p>${paragraph}</p>`;
-        }
+    const save_path = path.join(catalog_path, chapter_path, `/${index}.html`);
 
-        if ($("#chadown").length) {
-            content += `<div class="page"><a href="${chapter_path + '/' + (index + 1) + '.html'}">下一页</a></div>`;
-        }
+    if (fs.existsSync(save_path)) {
+        console.log('- 序号：' + index + '已存在，跳过抓取');
+        return chapter(urls, index + 1);
+    }
 
-        tpl = tpl.replace(/{{body}}/, content);
+    try {
+        request.get(url, (erro, res, body) => {
+            const $ = cheerio.load(body);
+            const title = $('.am-active').text();
+            let article = $('#cha-content').text()
+                .replace(/\t+/g, '')
+                .replace(/\n+/g, '#')
+                .replace(/\s+/g, '')
+                .split('#');
+            let tpl = article_tpl.replace(/{{title}}/, title);
+            let content = `<h1><a href="../index.html">${book_name}</a></h1><h2>${title}</a></h2>`;
+            for (let i = 0; i < article.length; i++) {
+                let paragraph = article[i];
+                content += `<p>${paragraph}</p>`;
+            }
 
-        const fw = fs.createWriteStream(path.join(catalog_path, chapter_path, `/${index}.html`));
-        fw.write(tpl);
-        fw.end();
-        chapter(urls, index + 1);
-    });
+            if ($("#chadown").length) {
+                content += `<div class="page"><a href="${'./' + (index + 1) + '.html'}">下一章</a></div>`;
+            }
+
+            tpl = tpl.replace(/{{body}}/, content);
+
+            const fw = fs.createWriteStream(save_path);
+            fw.write(tpl);
+            fw.end();
+            chapter(urls, index + 1);
+        });
+    } catch(e) {
+        console.log('- 地址：' + url + ' 抓取失败，正在重试');
+        chapter(urls, index);
+    }
 }
 
 function catalog(url) {

@@ -5,6 +5,9 @@
   "keywords": [
     "spider"
   ],
+  "scripts": {
+    "start": "node index.js"
+  },
   "author": "529662174@qq.com",
   "license": "ISC",
   "dependencies": {
